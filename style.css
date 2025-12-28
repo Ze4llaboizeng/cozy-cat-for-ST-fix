@@ -1,0 +1,463 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&family=La+Belle+Aurore&family=Mali:wght@700&display=swap");
+
+/* =========================
+   CozyCat isolation (SAFE)
+   ========================= */
+.cozycat-overlay {
+  color: #2C2420;
+  font-family: "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  filter: none !important;
+  transform: none !important;
+}
+
+.cozycat-overlay *,
+.cozycat-overlay *::before,
+.cozycat-overlay *::after {
+  box-sizing: border-box;
+}
+
+.cozycat-overlay a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* กันธีมอื่นที่ชอบไปยัดเส้น/สีให้ headings */
+.cozycat-overlay h1,
+.cozycat-overlay h2,
+.cozycat-overlay h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: inherit !important;
+}
+
+/* =========================
+   Paw button
+   ========================= */
+.cozycat-paw-btn {
+  position: fixed;
+  z-index: 999999;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 20, 20, 0.85);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.cozycat-paw-btn:active { cursor: grabbing; }
+.cozycat-paw-emoji { font-size: 26px; line-height: 1; }
+
+/* =========================
+   Overlay backdrop
+   ========================= */
+.cozycat-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999998;
+  display: none; /* toggled by JS */
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    calc(14px + env(safe-area-inset-top))
+    calc(14px + env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom))
+    calc(14px + env(safe-area-inset-left));
+
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* =========================
+   Screen container (ratio 1:2)
+   ========================= */
+.cozycat-screen {
+  aspect-ratio: 1 / 2;
+
+  height: min(640px, 88vh);
+  width: auto;
+  max-width: 92vw;
+
+  border-radius: 30px;
+  overflow: hidden;
+  border: 8px solid #111827;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+
+  background-color: #F7F5F0;
+  background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+
+  padding: 0; 
+}
+
+.cozycat-screen-inner {
+  height: 100%;
+  position: relative;
+}
+
+/* fallback if no aspect-ratio support */
+@supports not (aspect-ratio: 1 / 2) {
+  .cozycat-screen {
+    width: min(320px, 92vw);
+    height: min(640px, 88vh);
+  }
+}
+
+/* =========================
+   HOME layout 
+   ========================= */
+.cozycat-home {
+  height: 100%;
+  padding: 32px; /* (ใส่ padding ที่นี่แทน)*/
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.cozycat-header-small {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  color: #9ca3af;
+  margin: 16px 0 14px;
+}
+
+.cozycat-title {
+  font-family: "Playfair Display", serif;
+  font-size: 60px;
+  line-height: 0.9;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cozycat-title-italic { font-style: italic; }
+.cozycat-title-normal { font-style: normal; }
+
+.cozycat-title-indent {
+  margin-left: 32px;
+  display: inline-block;
+}
+
+.cozycat-title-rule {
+  width: 64px;
+  height: 2px;
+  background: #2C2420;
+  margin-top: 24px;
+  margin-left: 8px;
+}
+
+.cozycat-watermark {
+  position: absolute;
+  top: 43%;
+  right: -20px;
+  transform: rotate(90deg);
+  opacity: 0.10;
+  pointer-events: none;
+  font-family: "Cinzel", serif;
+  font-size: 96px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.cozycat-menu {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cozycat-menu-item {
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.cozycat-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 8px;
+  transition: border-color 150ms ease;
+}
+
+.cozycat-menu-item:hover .cozycat-menu-row {
+  border-bottom-color: #000;
+}
+
+.cozycat-menu-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.cozycat-menu-label {
+  font-size: 18px;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.cozycat-footer {
+  text-align: center;
+  font-family: "La Belle Aurore", cursive;
+  color: #6b7280;
+  font-size: 20px;
+}
+
+/* =========================
+   CARD screen layout 
+   ========================= */
+.cozycat-card-screen {
+  height: 100%;
+  width: 100%;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+}
+
+.cozycat-card-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Back button */
+.cozycat-back {
+  position: absolute;
+  top: 24px;   
+  left: 12px;  
+  z-index: 20;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  background: transparent;
+  border: 0;
+  padding: 6px 2px;
+  border-radius: 10px;
+
+  cursor: pointer;
+  user-select: none;
+
+  color: rgba(44, 36, 32, 0.75);
+  opacity: 0.6;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.cozycat-back:hover { opacity: 1; background: rgba(0,0,0,0.03); }
+.cozycat-back-text { font-size: 14px; font-weight: 700; letter-spacing: 0.025em; }
+.cozycat-back-svg { display: block; }
+
+/* Signature footer */
+.cozycat-card-signature {
+  position: absolute;
+  bottom: 32px;
+  text-align: center;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.cozycat-card-signature span {
+  font-family: "La Belle Aurore", cursive;
+  color: #9ca3af;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+}
+
+/* =========================
+   Card flip component (namespaced)
+   ========================= */
+.cozycat-card {
+  width: 280px;
+  height: 420px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: 0.6s cubic-bezier(.4,.2,.2,1);
+  cursor: pointer;
+  outline: 0;
+}
+.cozycat-card.is-flipped { transform: rotateY(180deg); }
+
+.cozycat-card-front,
+.cozycat-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px #0002;
+  background: #fff;
+}
+.cozycat-card-front { border: 6px solid #fff; }
+
+.cozycat-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cozycat-card-hint {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: #C19A6Bd9;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font: 700 12px "Mali", cursive;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.cozycat-card-back {
+  transform: rotateY(180deg);
+  background: #EFEFEF;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  font-family: "Times New Roman", serif;
+  color: #111;
+}
+
+.cozycat-card-watermark {
+  position: absolute;
+  top: -25px;
+  left: -20px;
+  font: 700 120px Arial, sans-serif;
+  color: #fff;
+  line-height: 1;
+  z-index: 0;
+}
+
+.cozycat-card-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cozycat-card-sub {
+  font: 10px sans-serif;
+  letter-spacing: 2px;
+  color: #555;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.cozycat-card-title {
+  font: italic 400 32px/.9 serif;
+  margin: 0 0 20px;
+}
+
+.cozycat-card-body {
+  border-top: 2px solid #000;
+  padding-top: 15px;
+  margin-top: auto;
+}
+
+.cozycat-card-stats {
+  display: flex;
+  justify-content: space-between;
+  font: 700 11px sans-serif;
+  letter-spacing: .5px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.cozycat-card-personality-label {
+  font-style: italic;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.cozycat-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #222;
+}
+
+.cozycat-card-list li::before {
+  content: "— ";
+  color: #888;
+}
+
+.cozycat-card-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: 30px;
+  opacity: 0.8;
+}
+
+/* =========================
+   Placeholder pages (status/music) -> ใส่ padding ให้พวกนี้
+   ========================= */
+.cozycat-page-screen {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.cozycat-page {
+  height: 100%;
+  padding: 32px;        
+  padding-top: 56px;   
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cozycat-page-title {
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-weight: 800;
+  color: rgba(44, 36, 32, 0.55);
+  font-size: 12px;
+}
+
+.cozycat-page-desc {
+  color: rgba(44, 36, 32, 0.75);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* =========================
+   Responsive tweaks
+   ========================= */
+@media (max-height: 740px) {
+  .cozycat-home { padding: 22px; }
+  .cozycat-title { font-size: 52px; }
+  .cozycat-watermark { font-size: 84px; }
+  .cozycat-menu { gap: 18px; margin-bottom: 22px; }
+}
+
+/* Mobile: align top */
+@media (max-width: 768px) {
+  .cozycat-overlay { align-items: flex-start; }
+  .cozycat-screen { margin-top: 10px; }
+  .cozycat-paw-btn { backdrop-filter: none; }
+}
