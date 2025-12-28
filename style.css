@@ -239,7 +239,7 @@
 /* Back button */
 .cozycat-back {
   position: absolute;
-  top: 24px;   
+  top: 34px;   
   left: 12px;  
   z-index: 20;
 
@@ -413,6 +413,129 @@
 }
 
 /* =========================
+   STATUS screen
+   ========================= */
+
+.cozycat-status-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Profile (top) */
+.cozycat-status-profile {
+  padding: 72px 32px 24px;
+  text-align: center;
+  border-bottom: 1px solid rgba(44,36,32,0.12);
+}
+
+.cozycat-status-avatar-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+}
+
+.cozycat-status-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.cozycat-status-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #2C2420;
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.cozycat-status-name {
+  font-family: "Playfair Display", serif;
+  font-size: 36px;
+  font-style: italic;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.cozycat-status-meta {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+/* Stats (bottom) */
+.cozycat-status-stats {
+  flex: 1;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.cozycat-status-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cozycat-status-row-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cozycat-status-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Cinzel", serif;
+}
+
+.cozycat-status-value {
+  color: #9ca3af;
+}
+
+.cozycat-status-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cozycat-status-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #2C2420;
+  border-radius: 3px;
+  transition: width 1.2s cubic-bezier(.22,1,.36,1);
+}
+
+/* Footer */
+.cozycat-status-footer {
+  text-align: center;
+  padding-bottom: 24px;
+  font-family: "La Belle Aurore", cursive;
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+/* =========================
    Placeholder pages (status/music) -> ใส่ padding ให้พวกนี้
    ========================= */
 .cozycat-page-screen {
@@ -444,6 +567,164 @@
   font-size: 14px;
   line-height: 1.4;
 }
+
+/* =========================
+   MUSIC screen
+   ========================= */
+.cozycat-music-screen { height: 100%; }
+
+.cozycat-music-content{
+  padding: 76px 32px 24px; /* เว้น top ให้พอดีกับ back เหมือน status */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cozycat-music-vinyl-area{ position: relative; }
+
+.cozycat-music-vinyl{
+  position: relative;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: #111;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.10);
+}
+
+.cozycat-music-grooves{
+  position:absolute; inset:0;
+  border-radius:50%;
+  background: repeating-radial-gradient(#111, #111 2px, #222 3px);
+  opacity: .8;
+}
+
+.cozycat-music-cover{
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  z-index: 2;
+  border: 4px solid #F7F5F0;
+}
+
+.spin-animation{ animation: cozycatSpin 8s linear infinite; }
+.paused-animation{ animation-play-state: paused; }
+@keyframes cozycatSpin { 100% { transform: rotate(360deg); } }
+
+.cozycat-music-stylus{
+  position: absolute;
+  top: -40px; right: -20px;
+  width: 15px; height: 100px;
+  background: #9ca3af;
+  border-radius: 5px;
+  transform-origin: top center;
+  transform: rotate(-30deg);
+  transition: transform .5s ease;
+  z-index: 10;
+}
+.cozycat-music-stylus.playing{ transform: rotate(0deg); }
+
+.cozycat-music-stylus-knob{
+  width: 20px; height: 20px;
+  background: #6b7280;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px; left: -2px;
+}
+
+.cozycat-music-track{ text-align:center; }
+.cozycat-music-tag{
+  font-family: "Cinzel", serif;
+  font-size: .7rem;
+  letter-spacing: .2em;
+  color: #9ca3af;
+  margin-bottom: .5rem;
+}
+.cozycat-music-title{
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+  line-height: 1;
+  font-style: italic;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+.cozycat-music-artist{
+  font-size: .85rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.cozycat-music-controls{ width: 100%; }
+
+.cozycat-music-progress{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.cozycat-music-progressbar{
+  -webkit-appearance:none;
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.cozycat-music-progressbar::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width: 12px; height: 12px;
+  background: #2C2420;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cozycat-music-btnrow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 32px;
+  margin-bottom: 14px;
+}
+
+.cozycat-music-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color: #2C2420;
+  opacity:.8;
+}
+.cozycat-music-btn:disabled{ opacity:.25; cursor: default; }
+
+.cozycat-music-play{
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #2C2420;
+  color: #F7F5F0;
+  border: none;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 10px 20px rgba(44,36,32,0.2);
+  cursor: pointer;
+}
+.cozycat-music-play svg { fill: currentColor; }
+
+.cozycat-music-sign{
+  text-align:center;
+  font-family: "La Belle Aurore", cursive;
+  color: #9ca3af;
+  font-size: 18px;
+  margin-top: 12px;
+}
+
 
 /* =========================
    Responsive tweaks

@@ -66,6 +66,121 @@ function loadSettings() {
 
   let currentScreen = SCREENS.home;
 
+    // ===== Music (global audio persists across screens) =====
+  const MUSIC_SRC_DEFAULT = 'https://od.lk/s/ODdfNDIxNjM0ODlf/2am.mp3';
+  
+
+  let cozyMusic = {
+    audio: null,
+    ui: null, 
+  };
+
+  function ensureMusicAudio() {
+    if (cozyMusic.audio) return cozyMusic.audio;
+
+    const a = document.createElement('audio');
+    a.id = `${extensionName}-audio`;
+    a.src = MUSIC_SRC_DEFAULT;
+    a.loop = true;
+    a.preload = 'auto';
+
+    // listeners (ติดครั้งเดียว)
+    a.addEventListener('timeupdate', () => updateMusicUIFromAudio());
+    a.addEventListener('loadedmetadata', () => updateMusicUIFromAudio());
+    a.addEventListener('play', () => updateMusicUIPlayState(true));
+    a.addEventListener('pause', () => updateMusicUIPlayState(false));
+
+    document.body.appendChild(a);
+    cozyMusic.audio = a;
+    return a;
+  }
+
+  function teardownMusicAudio() {
+    const a = cozyMusic.audio;
+    cozyMusic.ui = null;
+    if (!a) return;
+
+    try { a.pause(); } catch {}
+    a.src = '';
+    a.remove();
+    cozyMusic.audio = null;
+  }
+
+  function formatTime(seconds) {
+    const s = Number(seconds);
+    if (!Number.isFinite(s) || s < 0) return '0:00';
+    const m = Math.floor(s / 60);
+    const r = Math.floor(s % 60);
+    return `${m}:${r < 10 ? '0' : ''}${r}`;
+  }
+
+  function updateMusicUIFromAudio() {
+    const audio = cozyMusic.audio;
+    const ui = cozyMusic.ui;
+    if (!audio || !ui) return;
+
+    const d = audio.duration;
+    const t = audio.currentTime;
+
+    ui.currentTimeEl.textContent = formatTime(t);
+    ui.durationEl.textContent = Number.isFinite(d) ? formatTime(d) : '0:00';
+
+    if (Number.isFinite(d) && d > 0) {
+      ui.progress.value = String((t / d) * 100);
+    }
+  }
+
+  function updateMusicUIPlayState(isPlaying) {
+    const ui = cozyMusic.ui;
+    if (!ui) return;
+
+    ui.playIcon.style.display = isPlaying ? 'none' : 'block';
+    ui.pauseIcon.style.display = isPlaying ? 'block' : 'none';
+
+    ui.vinyl.classList.toggle('paused-animation', !isPlaying);
+    ui.stylus.classList.toggle('playing', isPlaying);
+  }
+
+  function connectMusicUI(rootEl) {
+    const audio = ensureMusicAudio();
+
+    const ui = {
+      playBtn: rootEl.querySelector('#cozycatPlayBtn'),
+      playIcon: rootEl.querySelector('#cozycatPlayIcon'),
+      pauseIcon: rootEl.querySelector('#cozycatPauseIcon'),
+      progress: rootEl.querySelector('#cozycatProgress'),
+      currentTimeEl: rootEl.querySelector('#cozycatCurrentTime'),
+      durationEl: rootEl.querySelector('#cozycatDuration'),
+      vinyl: rootEl.querySelector('#cozycatVinyl'),
+      stylus: rootEl.querySelector('#cozycatStylus'),
+    };
+
+    // ถ้าหน้า music ยังไม่ render ครบ อย่าทำอะไร
+    if (!ui.playBtn || !ui.progress) return;
+
+    cozyMusic.ui = ui;
+
+    // Play/Pause (ต้องกดจาก user gesture ถึงจะ play ได้ในบางเบราว์เซอร์)
+    ui.playBtn.addEventListener('click', async () => {
+      if (audio.paused) {
+        try { await audio.play(); } catch {}
+      } else {
+        audio.pause();
+      }
+    });
+
+    // Seek
+    ui.progress.addEventListener('input', () => {
+      if (!Number.isFinite(audio.duration)) return;
+      audio.currentTime = (Number(ui.progress.value) / 100) * audio.duration;
+   });
+
+    // sync initial
+    updateMusicUIFromAudio();
+    updateMusicUIPlayState(!audio.paused);
+  }
+
+
   // ===== Overlay system =====
   function mountOverlay() {
     if (document.getElementById(overlayId)) return;
@@ -212,18 +327,18 @@ function loadSettings() {
 
                 <div class="cozycat-card-body">
                   <div class="cozycat-card-stats">
-                    <span>TYPE: —</span>
-                    <span>SEX: —</span>
+                    <span>TYPE: {{type}}</span>
+                    <span>SEX: {{gender}}</span>
                   </div>
 
                   <div class="cozycat-card-personality">
                     <b class="cozycat-card-personality-label">Personality:</b>
                     <ul class="cozycat-card-list">
-                      <li>—</li>
-                      <li>—</li>
-                      <li>—</li>
-                      <li>—</li>
-                      <li>—</li>
+                      <li>{{energy}}</li>
+                      <li>{{social}}</li>
+                      <li>{{vocal}}</li>
+                      <li>{{crime}}</li>
+                      <li>{{lifestyle}}</li>
                     </ul>
                   </div>
                 </div>
@@ -242,28 +357,138 @@ function loadSettings() {
   }
 
   function templateStatus() {
-    return `
-      <div class="cozycat-page-screen">
-        ${templateBack()}
-        <div class="cozycat-page">
-          <div class="cozycat-page-title">status</div>
-          <div class="cozycat-page-desc">หน้าสเตตัสแมว (เดี๋ยวทำต่อ)</div>
+  const defaultImg = 'https://i.postimg.cc/4yQghhGj/none.png';
+
+  return `
+    <div class="cozycat-page-screen cozycat-status-screen">
+      ${templateBack()}
+
+      <!-- Profile -->
+      <div class="cozycat-status-profile">
+        <div class="cozycat-status-avatar-wrap">
+          <img src="${defaultImg}" class="cozycat-status-avatar" alt="Cat">
+          <div class="cozycat-status-badge">❤ {{HEALTH}}</div>
+        </div>
+
+        <div class="cozycat-status-name">{{name}}</div>
+
+        <div class="cozycat-status-meta">
+          <span>AGE: {{age}}</span>
+          <span>TYPE: {{type}}</span>
         </div>
       </div>
-    `;
-  }
+
+      <!-- Stats -->
+      <div class="cozycat-status-stats">
+
+        ${statusRow('🥩 Hunger', '{{hunger}}')}
+        ${statusRow('🧸 Happiness', '{{happiness}}')}
+        ${statusRow('🧼 Hygiene', '{{hygiene}}')}
+        ${statusRow('⚡ Energy', '{{energy}}')}
+
+      </div>
+
+      <div class="cozycat-status-footer">
+        dreaming of tuna...
+      </div>
+    </div>
+  `;
+}
+
+function statusRow(label, value) {
+  return `
+    <div class="cozycat-status-row">
+      <div class="cozycat-status-row-head">
+        <span class="cozycat-status-label">${label}</span>
+        <span class="cozycat-status-value">${value}%</span>
+      </div>
+      <div class="cozycat-status-bar-bg">
+        <div class="cozycat-status-bar-fill" style="width:${value}%;"></div>
+      </div>
+    </div>
+  `;
+}
+function animateStatusBars(rootEl) {
+  // เล่นเฉพาะใน status screen
+  const bars = rootEl.querySelectorAll('.cozycat-status-bar-fill');
+  if (!bars.length) return;
+
+  requestAnimationFrame(() => {
+    bars.forEach((bar) => {
+      const target = bar.style.width || '0%';
+      bar.style.width = '0%';
+      bar.offsetHeight; // force reflow
+      bar.style.width = target;
+    });
+  });
+}
+
+
 
   function templateMusic() {
-    return `
-      <div class="cozycat-page-screen">
-        ${templateBack()}
-        <div class="cozycat-page">
-          <div class="cozycat-page-title">music</div>
-          <div class="cozycat-page-desc">หน้าเครื่องเล่นเพลง (เดี๋ยวทำต่อ)</div>
+  const coverDefault = 'https://i.postimg.cc/4yQghhGj/none.png';
+
+  return `
+    <div class="cozycat-page-screen cozycat-music-screen">
+      ${templateBack()}
+
+      <div class="cozycat-music-content">
+        <!-- Vinyl -->
+        <div class="cozycat-music-vinyl-area">
+          <div class="cozycat-music-vinyl spin-animation paused-animation" id="cozycatVinyl">
+            <div class="cozycat-music-grooves"></div>
+            <img src="${coverDefault}" class="cozycat-music-cover" alt="Cover">
+          </div>
+
+          <div class="cozycat-music-stylus" id="cozycatStylus">
+            <div class="cozycat-music-stylus-knob"></div>
+          </div>
+        </div>
+
+        
+        <div class="cozycat-music-track">
+          <div class="cozycat-music-tag">NOW PLAYING • VOL. 03</div>
+          <div class="cozycat-music-title">Soft Paws on Wood Floors</div>
+          <div class="cozycat-music-artist">M. Entertainment</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="cozycat-music-controls">
+          <div class="cozycat-music-progress">
+            <span id="cozycatCurrentTime">0:00</span>
+            <input type="range" id="cozycatProgress" class="cozycat-music-progressbar" value="0" step="0.1">
+            <span id="cozycatDuration">0:00</span>
+          </div>
+
+          <div class="cozycat-music-btnrow">
+            <button class="cozycat-music-btn" type="button" aria-label="Previous" disabled>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 20L9 12l10-8v16zM5 4h2v16H5V4z"/>
+              </svg>
+            </button>
+
+            <button class="cozycat-music-play" type="button" id="cozycatPlayBtn" aria-label="Play/Pause">
+              <svg id="cozycatPlayIcon" width="24" height="24" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <svg id="cozycatPauseIcon" width="24" height="24" viewBox="0 0 24 24" style="display:none;">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+            </button>
+
+            <button class="cozycat-music-btn" type="button" aria-label="Next" disabled>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 4l10 8-10 8V4zm14 0h2v16h-2V4z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="cozycat-music-sign">on repeat forever...</div>
         </div>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
+
 
   function renderScreen(next) {
     currentScreen = next;
@@ -279,6 +504,16 @@ function loadSettings() {
     else html = templateHome();
 
     root.innerHTML = html;
+
+    if (next === SCREENS.status) {
+      animateStatusBars(root);
+    }
+     if (next === SCREENS.music) {
+    connectMusicUI(root);
+    } else {
+      cozyMusic.ui = null; // ออกจากหน้า music แต่ “ไม่หยุดเพลง”
+    }
+    
     wireScreenEvents(root);
   }
 
@@ -297,7 +532,7 @@ function loadSettings() {
       backBtn.addEventListener('click', () => renderScreen(SCREENS.home));
     }
 
-    // card flip (มือถือจะชัวร์กว่าพึ่ง :focus อย่างเดียว)
+    // card flip 
     const card = rootEl.querySelector('.cozycat-card');
     if (card) {
       const toggleFlip = () => card.classList.toggle('is-flipped');
@@ -442,8 +677,10 @@ function loadSettings() {
   // ===== enable/disable =====
   function applyEnabledState(isEnabled) {
     if (isEnabled) {
+      ensureMusicAudio();
       mountPawButton();
     } else {
+      teardownMusicAudio();
       unmountAll();
     }
   }
