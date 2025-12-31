@@ -50,11 +50,6 @@
   cursor: grab;
   user-select: none;
   touch-action: none;
-  right: calc(16px + env(safe-area-inset-right));
-  bottom: calc(16px + env(safe-area-inset-bottom));
-
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
 }
 .cozycat-paw-btn:active { cursor: grabbing; }
 .cozycat-paw-emoji { font-size: 26px; line-height: 1; }
@@ -754,6 +749,7 @@
   background: transparent;
   border: 1px solid;
   padding: 6px 8px;
+  
 
   font-family: "DM Sans", system-ui, sans-serif;
   font-size: 12px;

@@ -1674,18 +1674,16 @@ applyCatImages(root, state);
     btn.title = 'Cozy Cat Overlay';
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
-      const saved = getSavedPawPos();
-  if (saved) {
-    btn.style.left = `${saved.x}px`;
-    btn.style.top = `${saved.y}px`;
-    btn.style.right = 'auto';
-    btn.style.bottom = 'auto';
-  } else {
-    // รองรับ safe-area บนมือถือ (เช่น iOS)
-    btn.style.right = 'calc(16px + env(safe-area-inset-right))';
-    btn.style.bottom = 'calc(16px + env(safe-area-inset-bottom))';
-  }
-
+    const saved = getSavedPawPos();
+    if (saved) {
+      btn.style.left = `${saved.x}px`;
+      btn.style.top = `${saved.y}px`;
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+    } else {
+      btn.style.right = '16px';
+      btn.style.bottom = '16px';
+    }
 
     let dragging = false;
     let moved = false;
@@ -1745,64 +1743,6 @@ applyCatImages(root, state);
 
       if (!moved) toggleOverlay();
     });
-
-        // --- touch fallback (สำหรับบางเบราว์เซอร์มือถือที่ pointer ไม่ครบ) ---
-    let touchId = null;
-
-    btn.addEventListener('touchstart', (e) => {
-      const t = e.changedTouches && e.changedTouches[0];
-      if (!t) return;
-      touchId = t.identifier;
-      dragging = true;
-      moved = false;
-      e.preventDefault();
-
-      ensureLeftTop();
-      const rect = btn.getBoundingClientRect();
-      startLeft = rect.left;
-      startTop = rect.top;
-      startX = t.clientX;
-      startY = t.clientY;
-    }, { passive: false });
-
-    btn.addEventListener('touchmove', (e) => {
-      if (!dragging) return;
-      const t = [...e.changedTouches].find(x => x.identifier === touchId) || e.changedTouches[0];
-      if (!t) return;
-      e.preventDefault();
-
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-
-      const rect = btn.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-
-      const nextLeft = clamp(startLeft + dx, 8, vw - w - 8);
-      const nextTop  = clamp(startTop  + dy, 8, vh - h - 8);
-
-      btn.style.left = `${nextLeft}px`;
-      btn.style.top  = `${nextTop}px`;
-    }, { passive: false });
-
-    btn.addEventListener('touchend', (e) => {
-      const t = [...e.changedTouches].find(x => x.identifier === touchId) || e.changedTouches[0];
-      if (!t) return;
-      e.preventDefault();
-
-      dragging = false;
-      touchId = null;
-
-      const rect = btn.getBoundingClientRect();
-      savePawPos(rect.left, rect.top);
-
-      if (!moved) toggleOverlay();
-    });
-
 
     btn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
