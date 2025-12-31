@@ -1665,44 +1665,41 @@ applyCatImages(root, state);
 
   function mountPawButton() {
     if (document.getElementById(pawBtnId)) return;
+    // เพิ่ม Delay 1 วินาที รอให้หน้าจอมือถือโหลดเสร็จก่อนค่อยสร้างปุ่ม
+    setTimeout(() => {
+        
+        const btn = document.createElement('div');
+        btn.id = pawBtnId;
+        btn.className = 'cozycat-paw-btn';
+        btn.setAttribute('role', 'button');
+        btn.setAttribute('tabindex', '0');
+        btn.title = 'Cozy Cat Overlay';
+        btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
-    const btn = document.createElement('div');
-    btn.id = pawBtnId;
-    btn.className = 'cozycat-paw-btn';
-    btn.setAttribute('role', 'button');
-    btn.setAttribute('tabindex', '0');
-    btn.title = 'Cozy Cat Overlay';
-    btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
+        // ตรวจสอบขนาดหน้าจอ
+        const vw = window.innerWidth;
+        const isMobile = vw < 768;
 
-    const saved = getSavedPawPos();
+        // ถ้าเป็นมือถือ ให้ลบความจำตำแหน่งเดิมทิ้งทันที (ป้องกันค่าจาก PC มาทำพัง)
+        if (isMobile) {
+            localStorage.removeItem(pawPosKey);
+        }
 
-    // คำนวณขอบเขตหน้าจอปัจจุบัน
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    // เช็คว่าเป็นมือถือหรือไม่
-    const isMobile = vw < 768;
+        const saved = getSavedPawPos();
 
-    if (saved && !isMobile) {
-      // ถ้าเป็น PC และมีค่าเซฟ ให้ใช้ค่าเซฟปกติ
-      const btnSize = 60;
-      const safeX = Math.min(Math.max(0, saved.x), vw - btnSize);
-      const safeY = Math.min(Math.max(0, saved.y), vh - btnSize);
-      
-      btn.style.left = `${safeX}px`;
-      btn.style.top = `${safeY}px`;
-      // ล้างค่า right/bottom เพื่อให้ left/top ทำงาน
-      btn.style.right = 'auto';
-      btn.style.bottom = 'auto';
-    } else {
-      // ถ้าไม่มีค่าเซฟ (เปิดครั้งแรก)
-      // บนมือถือ ให้ตั้ง Default สูงขึ้นหน่อยหนีช่องแชท/คีย์บอร์ด
-      btn.style.left = 'auto';
-      btn.style.top = 'auto';
-      btn.style.right = '20px';
-      
-      // ดันขึ้นมาสูงๆ หนีช่องแชท SillyTavern Mobile
-      btn.style.bottom = isMobile ? '160px' : '20px'; 
-    }
+        if (saved && !isMobile) {
+            // PC: ใช้ตำแหน่งเดิม
+            btn.style.left = `${saved.x}px`;
+            btn.style.top = `${saved.y}px`;
+            btn.style.right = 'auto';
+            btn.style.bottom = 'auto';
+        } else {
+            // Mobile หรือ ครั้งแรก: 
+            // ไม่ต้อง set style.bottom/right ที่นี่ เพราะเราใช้ CSS !important บังคับไว้แล้วใน style.css
+            // การไม่ set inline style จะทำให้ CSS ทำงานได้เต็มที่
+            btn.style.left = '';
+            btn.style.top = '';
+        }
 
 
     let dragging = false;
@@ -1713,98 +1710,67 @@ applyCatImages(root, state);
 
     // ฟังก์ชันเริ่มลาก (ใช้ร่วมกันทั้ง Mouse และ Touch)
     const handleStart = (e) => {
-        // ถ้าเป็น Touch ให้กัน Event อื่นแทรก
-        if(e.type === 'touchstart') {
-            // e.preventDefault(); // อย่าเพิ่งใส่ preventDefault ตรงนี้ เดี๋ยวคลิกไม่ได้
-        }
+        if (isMobile) return; 
+
+            dragging = true;
+            moved = false;
+            
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+            const rect = btn.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            startX = clientX;
+            startY = clientY;
+            
+            if(e.type === 'pointerdown') btn.setPointerCapture(e.pointerId);
+        };
+
+        const handleMove = (e) => {
+            if (!dragging) return;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+
+            btn.style.left = `${startLeft + dx}px`;
+            btn.style.top = `${startTop + dy}px`;
+            btn.style.right = 'auto';
+            btn.style.bottom = 'auto';
+        };
+
+        const handleEnd = () => {
+            dragging = false;
+            if (moved && !isMobile) {
+                const rect = btn.getBoundingClientRect();
+                savePawPos(rect.left, rect.top);
+            }
+        };
+
+        // Click Event (แยกออกมาเพื่อให้ทำงานได้แม่นยำบนมือถือ)
+        const handleClick = (e) => {
+            if (!moved) {
+                toggleOverlay();
+            }
+        };
+
+        // Bind Events
+        btn.addEventListener('pointerdown', handleStart);
+        btn.addEventListener('pointermove', handleMove);
+        btn.addEventListener('pointerup', handleEnd);
         
-        dragging = true;
-        moved = false;
-        
-        // ดึง clientX/Y ให้ถูกประเภท
-        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        // เพิ่ม click event ธรรมดา (มือถือชอบ click มากกว่า pointerup)
+        btn.addEventListener('click', handleClick);
 
-        const rect = btn.getBoundingClientRect();
-        
-        // แปลงเป็นค่าคงที่ก่อนเริ่มลาก
-        btn.style.right = 'auto';
-        btn.style.bottom = 'auto';
-        btn.style.left = `${rect.left}px`;
-        btn.style.top = `${rect.top}px`;
+        document.body.appendChild(btn);
+        console.log('[Cozy Cat] Paw button mounted successfully.');
 
-        startLeft = rect.left;
-        startTop = rect.top;
-        startX = clientX;
-        startY = clientY;
-        
-        // Capture pointer สำหรับ PC
-        if(e.type === 'pointerdown') {
-            btn.setPointerCapture(e.pointerId);
-        }
-    };
-
-    const handleMove = (e) => {
-        if (!dragging) return;
-        
-        // ถ้าเป็นการลากบนมือถือ ต้องกันหน้าจอเลื่อน
-        if (e.type === 'touchmove') {
-             e.preventDefault(); 
-        }
-
-        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-
-        const dx = clientX - startX;
-        const dy = clientY - startY;
-
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const rect = btn.getBoundingClientRect();
-        
-        const nextLeft = clamp(startLeft + dx, 5, vw - rect.width - 5);
-        const nextTop = clamp(startTop + dy, 5, vh - rect.height - 5);
-
-        btn.style.left = `${nextLeft}px`;
-        btn.style.top = `${nextTop}px`;
-    };
-
-    const handleEnd = (e) => {
-        if(!dragging) return;
-        dragging = false;
-        
-        const rect = btn.getBoundingClientRect();
-        savePawPos(rect.left, rect.top);
-
-        if (!moved) {
-            // ถ้าไม่ได้ลาก (เป็นการแตะ/คลิก) ให้เปิด Overlay
-            toggleOverlay();
-        }
-    };
-
-    // Bind Events (รองรับทั้ง Pointer และ Touch แบบไฟล์ตัวอย่าง)
-    btn.addEventListener('pointerdown', handleStart);
-    btn.addEventListener('pointermove', handleMove);
-    btn.addEventListener('pointerup', handleEnd);
-    
-    // เพิ่ม Touch Events เผื่อ Mobile บางรุ่นที่ไม่รับ Pointer Events ดีพอ
-    btn.addEventListener('touchstart', handleStart, { passive: false });
-    btn.addEventListener('touchmove', handleMove, { passive: false });
-    btn.addEventListener('touchend', handleEnd);
-
-    // Keydown
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleOverlay();
-      }
-    });
-
-    document.body.appendChild(btn);
+    }, 1000); // จบ Delay 1000ms
   }
-
   function unmountPawButton() {
     const btn = document.getElementById(pawBtnId);
     if (btn) btn.remove();

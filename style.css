@@ -925,3 +925,29 @@
   color: #F7F5F0;
 }
 .cozycat-confirm-btn.danger:hover{ opacity: .92; }
+
+/* บังคับตำแหน่งสำหรับมือถือโดยเฉพาะ */
+@media (max-width: 768px) {
+.cozycat-paw-btn {
+    /* ใช้ !important บังคับทุกค่า เพื่อสู้กับ Inline Style ที่ JS อาจจะคำนวณผิด */
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    
+    /* วางตำแหน่ง Safe Zone: สูงจากข้างล่าง 120px (หนีช่องแชท) ชิดขวา 16px */
+    bottom: 120px !important;
+    right: 16px !important;
+    
+    /* ล้างค่า Top/Left ที่อาจจะติดมาจาก PC */
+    top: auto !important;
+    left: auto !important;
+    
+    /* รับประกันว่าต้องมองเห็น */
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    
+    /* เพิ่มเงาและขอบให้เห็นชัดๆ เผื่อจอมืด */
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 4px 10px rgba(0,0,0,0.5) !important;
+    border: 2px solid rgba(255,255,255,0.3) !important;
+  }
+}
