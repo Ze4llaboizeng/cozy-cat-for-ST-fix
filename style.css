@@ -36,27 +36,20 @@
    ========================= */
 .cozycat-paw-btn {
   position: fixed;
-  z-index: 2147483647 !important; 
+  z-index: 999999;
   width: 56px;
   height: 56px;
-  border-radius: 50%; 
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(20, 20, 20, 0.85);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
-  
-  bottom: 150px; 
-  right: 20px;
-  top: auto; 
-  left: auto;
-
-  /* Touch Action เพื่อกันการเลื่อนจอเวลาลากปุ่ม */
-  touch-action: none; 
-  user-select: none;
-
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
 .cozycat-paw-btn:active { cursor: grabbing; }
 .cozycat-paw-emoji { font-size: 26px; line-height: 1; }
@@ -926,28 +919,60 @@
 }
 .cozycat-confirm-btn.danger:hover{ opacity: .92; }
 
-/* บังคับตำแหน่งสำหรับมือถือโดยเฉพาะ */
-@media (max-width: 768px) {
+/* =========================
+   Paw button - Mobile fixes
+   ========================= */
 .cozycat-paw-btn {
-    /* ใช้ !important บังคับทุกค่า เพื่อสู้กับ Inline Style ที่ JS อาจจะคำนวณผิด */
-    position: fixed !important;
-    z-index: 2147483647 !important;
+  /* เพิ่มขนาดสำหรับมือถือ */
+  min-width: 56px;
+  min-height: 56px;
+  
+  /* ทำให้แสดงบนมือถือแน่นอน */
+  display: flex !important;
+  visibility: visible !important;
+  
+  /* ป้องกันถูกซ่อนโดย theme อื่น */
+  z-index: 999999 !important;
+}
+
+/* ป้องกัน mobile browser ซ่อนปุ่ม */
+@media (max-width: 768px) {
+  .cozycat-paw-btn {
+    /* ขนาดที่ใหญ่ขึ้นเล็กน้อยสำหรับมือถือ */
+    width: 60px !important;
+    height: 60px !important;
     
-    /* วางตำแหน่ง Safe Zone: สูงจากข้างล่าง 120px (หนีช่องแชท) ชิดขวา 16px */
-    bottom: 120px !important;
-    right: 16px !important;
-    
-    /* ล้างค่า Top/Left ที่อาจจะติดมาจาก PC */
-    top: auto !important;
-    left: auto !important;
-    
-    /* รับประกันว่าต้องมองเห็น */
-    display: flex !important;
-    visibility: visible !important;
+    /* กันไม่ให้ถูกซ่อน */
     opacity: 1 !important;
+    pointer-events: auto !important;
     
-    /* เพิ่มเงาและขอบให้เห็นชัดๆ เผื่อจอมืด */
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 4px 10px rgba(0,0,0,0.5) !important;
-    border: 2px solid rgba(255,255,255,0.3) !important;
+    /* ตำแหน่งเริ่มต้นสำหรับมือถือ */
+    right: 20px !important;
+    bottom: 80px !important; /* อยู่เหนือ keyboard */
+    
+    /* ปรับปรุง visibility */
+    background: rgba(20, 20, 20, 0.95) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  }
+  
+  .cozycat-paw-emoji {
+    font-size: 30px !important;
+  }
+}
+
+/* ป้องกัน touch issues บน iOS */
+@media (hover: none) and (pointer: coarse) {
+  .cozycat-paw-btn {
+    /* เพิ่ม touch target size */
+    min-height: 56px;
+    min-width: 56px;
+    
+    /* ป้องกัน highlight */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  .cozycat-paw-btn:active {
+    transform: scale(0.95);
   }
 }

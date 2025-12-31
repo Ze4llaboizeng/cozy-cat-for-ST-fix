@@ -1665,42 +1665,39 @@ applyCatImages(root, state);
 
   function mountPawButton() {
     if (document.getElementById(pawBtnId)) return;
-    // เพิ่ม Delay 1 วินาที รอให้หน้าจอมือถือโหลดเสร็จก่อนค่อยสร้างปุ่ม
-    setTimeout(() => {
-        
-        const btn = document.createElement('div');
-        btn.id = pawBtnId;
-        btn.className = 'cozycat-paw-btn';
-        btn.setAttribute('role', 'button');
-        btn.setAttribute('tabindex', '0');
-        btn.title = 'Cozy Cat Overlay';
-        btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
-
-        // ตรวจสอบขนาดหน้าจอ
-        const vw = window.innerWidth;
-        const isMobile = vw < 768;
-
-        // ถ้าเป็นมือถือ ให้ลบความจำตำแหน่งเดิมทิ้งทันที (ป้องกันค่าจาก PC มาทำพัง)
-        if (isMobile) {
-            localStorage.removeItem(pawPosKey);
-        }
-
-        const saved = getSavedPawPos();
-
-        if (saved && !isMobile) {
-            // PC: ใช้ตำแหน่งเดิม
-            btn.style.left = `${saved.x}px`;
-            btn.style.top = `${saved.y}px`;
-            btn.style.right = 'auto';
-            btn.style.bottom = 'auto';
-        } else {
-            // Mobile หรือ ครั้งแรก: 
-            // ไม่ต้อง set style.bottom/right ที่นี่ เพราะเราใช้ CSS !important บังคับไว้แล้วใน style.css
-            // การไม่ set inline style จะทำให้ CSS ทำงานได้เต็มที่
-            btn.style.left = '';
-            btn.style.top = '';
-        }
-
+  
+  // ตรวจสอบว่าเป็น mobile device หรือไม่
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // ป้องกันการ mount ในกรณีที่อาจมีปัญหา
+  if (isMobile && window.innerWidth < 768) {
+    console.log('[cozy-cat-for-ST] Mobile device detected, adjusting paw button...');
+  }
+  
+  const btn = document.createElement('div');
+  btn.id = pawBtnId;
+  btn.className = 'cozycat-paw-btn';
+  btn.setAttribute('role', 'button');
+  btn.setAttribute('tabindex', '0');
+  btn.title = 'Cozy Cat Overlay';
+  btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
+  
+  // สำหรับมือถือ ตั้งค่า default position ที่แตกต่าง
+  if (isMobile) {
+    btn.style.right = '24px';
+    btn.style.bottom = '100px'; // อยู่เหนือ virtual keyboard
+  } else {
+    const saved = getSavedPawPos();
+    if (saved) {
+      btn.style.left = `${saved.x}px`;
+      btn.style.top = `${saved.y}px`;
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+    } else {
+      btn.style.right = '16px';
+      btn.style.bottom = '16px';
+    }
+  }
 
     let dragging = false;
     let moved = false;
@@ -1708,69 +1705,74 @@ applyCatImages(root, state);
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
 
-    // ฟังก์ชันเริ่มลาก (ใช้ร่วมกันทั้ง Mouse และ Touch)
-    const handleStart = (e) => {
-        if (isMobile) return; 
+    function ensureLeftTop() {
+      const rect = btn.getBoundingClientRect();
+      btn.style.left = `${rect.left}px`;
+      btn.style.top = `${rect.top}px`;
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+    }
 
-            dragging = true;
-            moved = false;
-            
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    btn.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      moved = false;
 
-            const rect = btn.getBoundingClientRect();
-            startLeft = rect.left;
-            startTop = rect.top;
-            startX = clientX;
-            startY = clientY;
-            
-            if(e.type === 'pointerdown') btn.setPointerCapture(e.pointerId);
-        };
+      btn.setPointerCapture(e.pointerId);
+      ensureLeftTop();
 
-        const handleMove = (e) => {
-            if (!dragging) return;
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+      const rect = btn.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
 
-            const dx = clientX - startX;
-            const dy = clientY - startY;
+    btn.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
 
-            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
 
-            btn.style.left = `${startLeft + dx}px`;
-            btn.style.top = `${startTop + dy}px`;
-            btn.style.right = 'auto';
-            btn.style.bottom = 'auto';
-        };
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
 
-        const handleEnd = () => {
-            dragging = false;
-            if (moved && !isMobile) {
-                const rect = btn.getBoundingClientRect();
-                savePawPos(rect.left, rect.top);
-            }
-        };
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
 
-        // Click Event (แยกออกมาเพื่อให้ทำงานได้แม่นยำบนมือถือ)
-        const handleClick = (e) => {
-            if (!moved) {
-                toggleOverlay();
-            }
-        };
+      const rect = btn.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
 
-        // Bind Events
-        btn.addEventListener('pointerdown', handleStart);
-        btn.addEventListener('pointermove', handleMove);
-        btn.addEventListener('pointerup', handleEnd);
-        
-        // เพิ่ม click event ธรรมดา (มือถือชอบ click มากกว่า pointerup)
-        btn.addEventListener('click', handleClick);
+      const nextLeft = clamp(startLeft + dx, 8, vw - w - 8);
+      const nextTop = clamp(startTop + dy, 8, vh - h - 8);
 
-        document.body.appendChild(btn);
-        console.log('[Cozy Cat] Paw button mounted successfully.');
+      btn.style.left = `${nextLeft}px`;
+      btn.style.top = `${nextTop}px`;
+    });
 
-    }, 1000); // จบ Delay 1000ms
+    btn.addEventListener('pointerup', () => {
+      dragging = false;
+
+      const rect = btn.getBoundingClientRect();
+      savePawPos(rect.left, rect.top);
+
+      if (!moved) toggleOverlay();
+    });
+
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleOverlay();
+      }
+    });
+
+    // เพิ่ม touch event สำหรับมือถือ
+    btn.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // ป้องกัน double-tap zoom
+    }, { passive: false });
+
+    document.body.appendChild(btn);
   }
+
   function unmountPawButton() {
     const btn = document.getElementById(pawBtnId);
     if (btn) btn.remove();
@@ -1786,6 +1788,16 @@ applyCatImages(root, state);
     if (isEnabled) {
       ensureMusicAudio();
       mountPawButton();
+      // เพิ่มการตรวจสอบว่าปุ่มถูกสร้างจริงหรือไม่
+      setTimeout(() => {
+        const btn = document.getElementById(pawBtnId);
+        if (btn) {
+          console.log('[cozy-cat-for-ST] Paw button created successfully');
+          console.log('[cozy-cat-for-ST] Button style:', btn.style.cssText);
+        } else {
+          console.error('[cozy-cat-for-ST] Paw button NOT created!');
+        }
+      }, 100);
     } else {
       teardownMusicAudio();
       unmountAll();
