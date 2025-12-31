@@ -19,9 +19,11 @@
     * ⚡ **Energy**
     * ❤ **Health Status** (Healthy, Weak, Sick, Injured, Critical)
 
+* **Growth System:** Tracks the cat's age based on Calendar UI in the chat.
+
 <img src="UI Preview/04-status.jpg"  width= "300" > 
 
-* **Growth System:** Tracks the cat's age based on Calendar UI in the chat.
+
 * **Pet Card:** A flippable card showing your cat's personality traits.
 
 <img src="UI Preview/02-card-front.jpg"  width= "300" > <img src="UI Preview/03-card-back.jpg"  width= "300" > 
