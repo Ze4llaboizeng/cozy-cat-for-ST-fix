@@ -36,7 +36,7 @@
    ========================= */
 .cozycat-paw-btn {
   position: fixed;
-  /* Elevate above mobile overlays */
+  /* Elevate above mobile overlays; mobile components use z-index up to 2^31-1 */
   z-index: 2147483647;
   width: 56px;
   height: 56px;
@@ -51,8 +51,6 @@
   cursor: grab;
   user-select: none;
   touch-action: none;
-  margin-bottom: env(safe-area-inset-bottom);
-  margin-right: env(safe-area-inset-right);
 }
 .cozycat-paw-btn:active { cursor: grabbing; }
 .cozycat-paw-emoji { font-size: 26px; line-height: 1; }
