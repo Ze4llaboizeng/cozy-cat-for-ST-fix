@@ -7,16 +7,30 @@
 ## ✨ Features
 
 * **Interactive Overlay:** A "phone-like" interface accessible via a draggable **Paw Button** 🐾.
+  
+![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/01-home.jpg)
+
 * **Status Tracking:** Automatically tracks dynamic stats based on roleplay context:
     * 🥩 **Hunger**
     * 🧸 **Happiness**
     * 🧼 **Hygiene**
     * ⚡ **Energy**
     * ❤ **Health Status** (Healthy, Weak, Sick, Injured, Critical)
+
+![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/04-status.jpg)
+
 * **Growth System:** Tracks the cat's age based on Calendar UI in the chat.
 * **Pet Card:** A flippable card showing your cat's personality traits.
+
+![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/02-card-front.jpg) ![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/03-card-back.jpg)
+
 * **Music Player:** A built-in vinyl player that plays a cozy background loop.
+
+![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/05-music.jpg)
+
 * **Per-Chat Persistence:** Cat data is saved specifically for each chat session, which can be reset by user.
+
+![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/reset.jpg)
 
 ## 📦 Installation
 
@@ -33,3 +47,4 @@ This extension listens for specific **hidden HTML comments** in the AI's output 
 
 ## 🔥 Special Thanks: POPKO
 Thanks for helping me start things off; otherwise, I'd still be procrastinating, not knowing where to begin.
+
