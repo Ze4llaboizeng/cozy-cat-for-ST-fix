@@ -1675,14 +1675,31 @@ applyCatImages(root, state);
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
     const saved = getSavedPawPos();
+    // คำนวณขอบเขตหน้าจอปัจจุบัน
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const btnSize = 60; // ขนาดปุ่มโดยประมาณรวมขอบ
+
     if (saved) {
-      btn.style.left = `${saved.x}px`;
-      btn.style.top = `${saved.y}px`;
+      // บังคับ (Clamp) ให้ค่า x, y ไม่เกินขนาดหน้าจอปัจจุบัน
+      // ป้องกันปุ่มลอยตกขอบจอมือถือ
+      const safeX = Math.min(Math.max(0, saved.x), vw - btnSize);
+      const safeY = Math.min(Math.max(0, saved.y), vh - btnSize);
+
+      btn.style.left = `${safeX}px`;
+      btn.style.top = `${safeY}px`;
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
-      btn.style.right = '16px';
-      btn.style.bottom = '16px';
+      // ถ้าไม่มีค่าเซฟ (เปิดครั้งแรก)
+      // บนมือถือ ให้ตั้ง Default สูงขึ้นหน่อยหนีช่องแชท/คีย์บอร์ด
+      if (vw < 768) {
+        btn.style.right = '16px';
+        btn.style.bottom = '120px'; // สูงขึ้นหลบ UI แชทของ SillyTavern Mobile
+      } else {
+        btn.style.right = '16px';
+        btn.style.bottom = '16px';
+      }
     }
 
     let dragging = false;
@@ -1752,14 +1769,6 @@ applyCatImages(root, state);
     });
 
     document.body.appendChild(btn);
-
-    // Export the paw mounting function to the global scope so it can be
-    // called outside of loadSettings().  Without this, mountPawButton is scoped
-    // locally and cannot be accessed by the fallback in DOMContentLoaded.  The
-    // export ensures the fallback can call it safely.
-    if (typeof window !== 'undefined') {
-      window.__cozycatMountPawButton = mountPawButton;
-    }
   }
 
   function unmountPawButton() {
@@ -1815,38 +1824,10 @@ applyEnabledState(enabled);
   attachChatHooks();
 
 }
-// In desktop ST the extension relies on jQuery's ready handler to run loadSettings(),
-// but the mobile UI may not load jQuery.  Provide a fallback that uses
-// DOMContentLoaded and mounts the paw button directly when jQuery is unavailable.
-if (typeof jQuery !== 'undefined' && typeof jQuery === 'function') {
-  jQuery(async () => {
-    loadSettings();
-    console.log('[cozy-cat-for-ST] Panel Loaded via jQuery.');
-  });
-} else {
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      loadSettings();
-      console.log('[cozy-cat-for-ST] Panel Loaded via DOMContentLoaded.');
-    } catch (e) {
-      console.warn('[cozy-cat-for-ST] loadSettings() failed; mounting paw button fallback.', e);
-      // Without jQuery or settings UI we can't read the enabled flag.  Always
-      // mount the paw button on mobile fallback so the user can access the
-      // overlay even if the extension hasn't been enabled via desktop UI.
-      try {
-        // Call the globally exported paw mounting function.  mountPawButton()
-        // is defined within loadSettings() and exported as window.__cozycatMountPawButton.
-        // Calling it directly here would cause a ReferenceError, so we use the
-        // global reference instead.
-        if (typeof window !== 'undefined' && typeof window.__cozycatMountPawButton === 'function') {
-          window.__cozycatMountPawButton();
-        }
-      } catch (ex) {
-        console.error('[cozy-cat-for-ST] Failed to mount paw button fallback:', ex);
-      }
-    }
-  });
-}
+jQuery(async () => {
+  loadSettings();
+  console.log('[cozy-cat-for-ST] Panel Loaded.');
+});
 
 
 
