@@ -1822,14 +1822,13 @@ if (typeof jQuery !== 'undefined' && typeof jQuery === 'function') {
       console.log('[cozy-cat-for-ST] Panel Loaded via DOMContentLoaded.');
     } catch (e) {
       console.warn('[cozy-cat-for-ST] loadSettings() failed; mounting paw button fallback.', e);
-      const enabledKey = `${extensionName}:enabled`;
-      const isEnabled = localStorage.getItem(enabledKey) === 'true';
-      if (isEnabled) {
-        try {
-          mountPawButton();
-        } catch (ex) {
-          console.error('[cozy-cat-for-ST] Failed to mount paw button fallback:', ex);
-        }
+      // Without jQuery or settings UI we can't read the enabled flag.  Always
+      // mount the paw button on mobile fallback so the user can access the
+      // overlay even if the extension hasn't been enabled via desktop UI.
+      try {
+        mountPawButton();
+      } catch (ex) {
+        console.error('[cozy-cat-for-ST] Failed to mount paw button fallback:', ex);
       }
     }
   });
