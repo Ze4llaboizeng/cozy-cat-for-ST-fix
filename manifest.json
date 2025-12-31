@@ -5,8 +5,8 @@
   "optional": [],
   "js": "index.js",
   "css": "style.css",
-  "original author": "Mors",
-  "Helper": "POPKO-คนเท่",
+  "author": "Mors",
+  "helper": "POPKO-คนเท่",
   "version": "1.0",
   "homePage": "https://github.com/Mors1212/cozy-cat-for-ST.git",
   "description": "extension for your fluffy cat"
