@@ -36,25 +36,27 @@
    ========================= */
 .cozycat-paw-btn {
   position: fixed;
-  z-index: 2147483647;
+  z-index: 2147483647 !important; 
   width: 56px;
   height: 56px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%; 
   background: rgba(20, 20, 20, 0.85);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
   
-  /* เพิ่มส่วนนี้: ป้องกันปุ่มหายไปในขอบจอมือถือ */
-  margin-bottom: env(safe-area-inset-bottom);
-  margin-right: env(safe-area-inset-right);
+  bottom: 150px; 
+  right: 20px;
+  top: auto; 
+  left: auto;
+
+  /* Touch Action เพื่อกันการเลื่อนจอเวลาลากปุ่ม */
+  touch-action: none; 
+  user-select: none;
 
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
+  cursor: pointer;
 }
 .cozycat-paw-btn:active { cursor: grabbing; }
 .cozycat-paw-emoji { font-size: 26px; line-height: 1; }

@@ -1675,32 +1675,35 @@ applyCatImages(root, state);
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
     const saved = getSavedPawPos();
+
     // คำนวณขอบเขตหน้าจอปัจจุบัน
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const btnSize = 60; // ขนาดปุ่มโดยประมาณรวมขอบ
+    // เช็คว่าเป็นมือถือหรือไม่
+    const isMobile = vw < 768;
 
-    if (saved) {
-      // บังคับ (Clamp) ให้ค่า x, y ไม่เกินขนาดหน้าจอปัจจุบัน
-      // ป้องกันปุ่มลอยตกขอบจอมือถือ
+    if (saved && !isMobile) {
+      // ถ้าเป็น PC และมีค่าเซฟ ให้ใช้ค่าเซฟปกติ
+      const btnSize = 60;
       const safeX = Math.min(Math.max(0, saved.x), vw - btnSize);
       const safeY = Math.min(Math.max(0, saved.y), vh - btnSize);
-
+      
       btn.style.left = `${safeX}px`;
       btn.style.top = `${safeY}px`;
+      // ล้างค่า right/bottom เพื่อให้ left/top ทำงาน
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
       // ถ้าไม่มีค่าเซฟ (เปิดครั้งแรก)
       // บนมือถือ ให้ตั้ง Default สูงขึ้นหน่อยหนีช่องแชท/คีย์บอร์ด
-      if (vw < 768) {
-        btn.style.right = '16px';
-        btn.style.bottom = '120px'; // สูงขึ้นหลบ UI แชทของ SillyTavern Mobile
-      } else {
-        btn.style.right = '16px';
-        btn.style.bottom = '16px';
-      }
+      btn.style.left = 'auto';
+      btn.style.top = 'auto';
+      btn.style.right = '20px';
+      
+      // ดันขึ้นมาสูงๆ หนีช่องแชท SillyTavern Mobile
+      btn.style.bottom = isMobile ? '160px' : '20px'; 
     }
+
 
     let dragging = false;
     let moved = false;
@@ -1708,59 +1711,90 @@ applyCatImages(root, state);
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
 
-    function ensureLeftTop() {
-      const rect = btn.getBoundingClientRect();
-      btn.style.left = `${rect.left}px`;
-      btn.style.top = `${rect.top}px`;
-      btn.style.right = 'auto';
-      btn.style.bottom = 'auto';
-    }
+    // ฟังก์ชันเริ่มลาก (ใช้ร่วมกันทั้ง Mouse และ Touch)
+    const handleStart = (e) => {
+        // ถ้าเป็น Touch ให้กัน Event อื่นแทรก
+        if(e.type === 'touchstart') {
+            // e.preventDefault(); // อย่าเพิ่งใส่ preventDefault ตรงนี้ เดี๋ยวคลิกไม่ได้
+        }
+        
+        dragging = true;
+        moved = false;
+        
+        // ดึง clientX/Y ให้ถูกประเภท
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-    btn.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      moved = false;
+        const rect = btn.getBoundingClientRect();
+        
+        // แปลงเป็นค่าคงที่ก่อนเริ่มลาก
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+        btn.style.left = `${rect.left}px`;
+        btn.style.top = `${rect.top}px`;
 
-      btn.setPointerCapture(e.pointerId);
-      ensureLeftTop();
+        startLeft = rect.left;
+        startTop = rect.top;
+        startX = clientX;
+        startY = clientY;
+        
+        // Capture pointer สำหรับ PC
+        if(e.type === 'pointerdown') {
+            btn.setPointerCapture(e.pointerId);
+        }
+    };
 
-      const rect = btn.getBoundingClientRect();
-      startLeft = rect.left;
-      startTop = rect.top;
-      startX = e.clientX;
-      startY = e.clientY;
-    });
+    const handleMove = (e) => {
+        if (!dragging) return;
+        
+        // ถ้าเป็นการลากบนมือถือ ต้องกันหน้าจอเลื่อน
+        if (e.type === 'touchmove') {
+             e.preventDefault(); 
+        }
 
-    btn.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
 
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
 
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const rect = btn.getBoundingClientRect();
+        
+        const nextLeft = clamp(startLeft + dx, 5, vw - rect.width - 5);
+        const nextTop = clamp(startTop + dy, 5, vh - rect.height - 5);
 
-      const rect = btn.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+        btn.style.left = `${nextLeft}px`;
+        btn.style.top = `${nextTop}px`;
+    };
 
-      const nextLeft = clamp(startLeft + dx, 8, vw - w - 8);
-      const nextTop = clamp(startTop + dy, 8, vh - h - 8);
+    const handleEnd = (e) => {
+        if(!dragging) return;
+        dragging = false;
+        
+        const rect = btn.getBoundingClientRect();
+        savePawPos(rect.left, rect.top);
 
-      btn.style.left = `${nextLeft}px`;
-      btn.style.top = `${nextTop}px`;
-    });
+        if (!moved) {
+            // ถ้าไม่ได้ลาก (เป็นการแตะ/คลิก) ให้เปิด Overlay
+            toggleOverlay();
+        }
+    };
 
-    btn.addEventListener('pointerup', () => {
-      dragging = false;
+    // Bind Events (รองรับทั้ง Pointer และ Touch แบบไฟล์ตัวอย่าง)
+    btn.addEventListener('pointerdown', handleStart);
+    btn.addEventListener('pointermove', handleMove);
+    btn.addEventListener('pointerup', handleEnd);
+    
+    // เพิ่ม Touch Events เผื่อ Mobile บางรุ่นที่ไม่รับ Pointer Events ดีพอ
+    btn.addEventListener('touchstart', handleStart, { passive: false });
+    btn.addEventListener('touchmove', handleMove, { passive: false });
+    btn.addEventListener('touchend', handleEnd);
 
-      const rect = btn.getBoundingClientRect();
-      savePawPos(rect.left, rect.top);
-
-      if (!moved) toggleOverlay();
-    });
-
+    // Keydown
     btn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
