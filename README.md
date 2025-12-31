@@ -8,7 +8,9 @@
 
 * **Interactive Overlay:** A "phone-like" interface accessible via a draggable **Paw Button** 🐾.
   
-![image](https://github.com/Mors1212/cozy-cat-for-ST/blob/efc64a6703dd856c8150ed36837ce752607ef500/UI%20Preview/01-home.jpg)
+
+  <img src="UI Preview/01-home.jpg"  width= "300" > 
+
 
 * **Status Tracking:** Automatically tracks dynamic stats based on roleplay context:
     * 🥩 **Hunger**
