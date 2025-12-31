@@ -1665,28 +1665,15 @@ applyCatImages(root, state);
 
   function mountPawButton() {
     if (document.getElementById(pawBtnId)) return;
-  
-  // ตรวจสอบว่าเป็น mobile device หรือไม่
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  // ป้องกันการ mount ในกรณีที่อาจมีปัญหา
-  if (isMobile && window.innerWidth < 768) {
-    console.log('[cozy-cat-for-ST] Mobile device detected, adjusting paw button...');
-  }
-  
-  const btn = document.createElement('div');
-  btn.id = pawBtnId;
-  btn.className = 'cozycat-paw-btn';
-  btn.setAttribute('role', 'button');
-  btn.setAttribute('tabindex', '0');
-  btn.title = 'Cozy Cat Overlay';
-  btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
-  
-  // สำหรับมือถือ ตั้งค่า default position ที่แตกต่าง
-  if (isMobile) {
-    btn.style.right = '24px';
-    btn.style.bottom = '100px'; // อยู่เหนือ virtual keyboard
-  } else {
+
+    const btn = document.createElement('div');
+    btn.id = pawBtnId;
+    btn.className = 'cozycat-paw-btn';
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.title = 'Cozy Cat Overlay';
+    btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
+
     const saved = getSavedPawPos();
     if (saved) {
       btn.style.left = `${saved.x}px`;
@@ -1697,7 +1684,6 @@ applyCatImages(root, state);
       btn.style.right = '16px';
       btn.style.bottom = '16px';
     }
-  }
 
     let dragging = false;
     let moved = false;
@@ -1765,11 +1751,6 @@ applyCatImages(root, state);
       }
     });
 
-    // เพิ่ม touch event สำหรับมือถือ
-    btn.addEventListener('touchstart', function(e) {
-    e.preventDefault(); // ป้องกัน double-tap zoom
-    }, { passive: false });
-
     document.body.appendChild(btn);
   }
 
@@ -1788,16 +1769,6 @@ applyCatImages(root, state);
     if (isEnabled) {
       ensureMusicAudio();
       mountPawButton();
-      // เพิ่มการตรวจสอบว่าปุ่มถูกสร้างจริงหรือไม่
-      setTimeout(() => {
-        const btn = document.getElementById(pawBtnId);
-        if (btn) {
-          console.log('[cozy-cat-for-ST] Paw button created successfully');
-          console.log('[cozy-cat-for-ST] Button style:', btn.style.cssText);
-        } else {
-          console.error('[cozy-cat-for-ST] Paw button NOT created!');
-        }
-      }, 100);
     } else {
       teardownMusicAudio();
       unmountAll();

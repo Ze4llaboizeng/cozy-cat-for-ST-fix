@@ -749,7 +749,6 @@
   background: transparent;
   border: 1px solid;
   padding: 6px 8px;
-  
 
   font-family: "DM Sans", system-ui, sans-serif;
   font-size: 12px;
@@ -918,61 +917,3 @@
   color: #F7F5F0;
 }
 .cozycat-confirm-btn.danger:hover{ opacity: .92; }
-
-/* =========================
-   Paw button - Mobile fixes
-   ========================= */
-.cozycat-paw-btn {
-  /* เพิ่มขนาดสำหรับมือถือ */
-  min-width: 56px;
-  min-height: 56px;
-  
-  /* ทำให้แสดงบนมือถือแน่นอน */
-  display: flex !important;
-  visibility: visible !important;
-  
-  /* ป้องกันถูกซ่อนโดย theme อื่น */
-  z-index: 999999 !important;
-}
-
-/* ป้องกัน mobile browser ซ่อนปุ่ม */
-@media (max-width: 768px) {
-  .cozycat-paw-btn {
-    /* ขนาดที่ใหญ่ขึ้นเล็กน้อยสำหรับมือถือ */
-    width: 60px !important;
-    height: 60px !important;
-    
-    /* กันไม่ให้ถูกซ่อน */
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    
-    /* ตำแหน่งเริ่มต้นสำหรับมือถือ */
-    right: 20px !important;
-    bottom: 80px !important; /* อยู่เหนือ keyboard */
-    
-    /* ปรับปรุง visibility */
-    background: rgba(20, 20, 20, 0.95) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
-  }
-  
-  .cozycat-paw-emoji {
-    font-size: 30px !important;
-  }
-}
-
-/* ป้องกัน touch issues บน iOS */
-@media (hover: none) and (pointer: coarse) {
-  .cozycat-paw-btn {
-    /* เพิ่ม touch target size */
-    min-height: 56px;
-    min-width: 56px;
-    
-    /* ป้องกัน highlight */
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-  }
-  
-  .cozycat-paw-btn:active {
-    transform: scale(0.95);
-  }
-}
