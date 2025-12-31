@@ -1675,28 +1675,31 @@ applyCatImages(root, state);
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
     const saved = getSavedPawPos();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+  
     if (saved) {
-      btn.style.left = `${saved.x}px`;
-      btn.style.top = `${saved.y}px`;
-      btn.style.right = 'auto';
-      btn.style.bottom = 'auto';
+    // คำนวณขอบเขต: ถ้าตำแหน่งที่เซฟไว้ มากกว่าความกว้างจอ ให้ดึงกลับมา
+    // ลบ 60px เพื่อเผื่อขนาดปุ่ม
+    let safeX = Math.min(saved.x, vw - 60); 
+    let safeY = Math.min(saved.y, vh - 60);
+
+    // ป้องกันค่าติดลบ
+    safeX = Math.max(8, safeX);
+    safeY = Math.max(8, safeY);
+
+    btn.style.left = `${safeX}px`;
+    btn.style.top = `${safeY}px`;
+    
+    // สำคัญ: ต้องเคลียร์ right/bottom เพื่อไม่ให้ CSS ตีกัน
+    btn.style.right = 'auto';
+    btn.style.bottom = 'auto';
     } else {
-      btn.style.right = '16px';
-      btn.style.bottom = '16px';
-    }
-
-    let dragging = false;
-    let moved = false;
-
-    let startX = 0, startY = 0;
-    let startLeft = 0, startTop = 0;
-
-    function ensureLeftTop() {
-      const rect = btn.getBoundingClientRect();
-      btn.style.left = `${rect.left}px`;
-      btn.style.top = `${rect.top}px`;
-      btn.style.right = 'auto';
-      btn.style.bottom = 'auto';
+    // ถ้าไม่เคยเซฟ ให้วางมุมขวาล่างตามปกติ
+    btn.style.right = '16px';
+    btn.style.bottom = '16px';
+    btn.style.left = 'auto'; // เพิ่มความชัวร์
+    btn.style.top = 'auto';  // เพิ่มความชัวร์
     }
 
     btn.addEventListener('pointerdown', (e) => {
@@ -1803,7 +1806,10 @@ applyCatImages(root, state);
     // Also clear any in-memory UI
     refreshIfOverlayOpen();
   }
-applyEnabledState(enabled);
+
+  const isEnabledGlobal = localStorage.getItem(`${extensionName}:enabled`) === 'true';
+  applyEnabledState(isEnabledGlobal);
+  applyEnabledState(enabled);
   attachChatHooks();
 
 }
