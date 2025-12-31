@@ -726,9 +726,26 @@
 }
 
 /* =========================
+   Responsive tweaks
+   ========================= */
+@media (max-height: 740px) {
+  .cozycat-home { padding: 22px; }
+  .cozycat-title { font-size: 52px; }
+  .cozycat-watermark { font-size: 84px; }
+  .cozycat-menu { gap: 18px; margin-bottom: 22px; }
+}
+
+/* Mobile: align top */
+@media (max-width: 768px) {
+  .cozycat-overlay { align-items: flex-start; }
+  .cozycat-screen { margin-top: 10px; }
+  .cozycat-paw-btn { backdrop-filter: none; }
+}
+
+/* =========================
    CozyCat Reset Button
    ========================= */
-.btn {
+.cozycatResetBtn {
   background: transparent;
   border: 1px solid;
   padding: 6px 8px;
@@ -749,30 +766,154 @@
     background-color 0.2s ease;
 }
 
-.btn:hover {
+.cozycatResetBtn:hover {
   opacity: 1;
   background-color: rgba(44, 36, 32, 0.06);
 }
 
-.btn:active {
+.cozycatResetBtn:active {
   background-color: rgba(44, 36, 32, 0.12);
 }
 
 
 
-/* =========================
-   Responsive tweaks
-   ========================= */
-@media (max-height: 740px) {
-  .cozycat-home { padding: 22px; }
-  .cozycat-title { font-size: 52px; }
-  .cozycat-watermark { font-size: 84px; }
-  .cozycat-menu { gap: 18px; margin-bottom: 22px; }
+/* Cozy reset confirm modal */
+.cozycat-confirm-backdrop{
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
 }
 
-/* Mobile: align top */
-@media (max-width: 768px) {
-  .cozycat-overlay { align-items: flex-start; }
-  .cozycat-screen { margin-top: 10px; }
-  .cozycat-paw-btn { backdrop-filter: none; }
+.cozycat-confirm-dialog{
+  width: min(360px, 92vw);
+  border-radius: 16px;
+  background: #F7F5F0;
+  border: 1px solid rgba(44,36,32,.15);
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  padding: 14px 14px 12px;
+  color: #2C2420;
+  font-family: "DM Sans", system-ui, sans-serif;
 }
+
+.cozycat-confirm-title{
+  font-weight: 800;
+  letter-spacing: .02em;
+  margin-bottom: 6px;
+}
+
+.cozycat-confirm-text{
+  font-size: 13px;
+  line-height: 1.35;
+  opacity: .85;
+}
+
+.cozycat-confirm-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cozycat-confirm-btn{
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: rgba(44,36,32,.08);
+  color: #2C2420;
+  font-weight: 700;
+}
+
+.cozycat-confirm-btn:hover{ background: rgba(44,36,32,.12); }
+
+.cozycat-confirm-btn.danger{
+  background: rgba(44,36,32,.95);
+  color: #F7F5F0;
+}
+.cozycat-confirm-btn.danger:hover{ opacity: .92; }
+
+/* =========================
+   CozyCat Confirm Modal (mobile-safe)
+   ========================= */
+.cozycat-confirm-backdrop{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+
+  /* mobile: ใช้ dvh กันปัญหา address bar */
+  height: 100dvh;
+  min-height: 100vh;
+
+  z-index: 2147483647; /* สูงสุดกันโดนทับ */
+  background: rgba(0,0,0,.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* เว้น safe-area กันชน notch / status bar */
+  padding:
+    calc(16px + env(safe-area-inset-top))
+    16px
+    calc(16px + env(safe-area-inset-bottom))
+    16px;
+}
+
+.cozycat-confirm-dialog{
+  width: min(360px, 92vw);
+  border-radius: 16px;
+  background: #F7F5F0;
+  border: 1px solid rgba(44,36,32,.15);
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  padding: 14px 14px 12px;
+  color: #2C2420;
+  font-family: "DM Sans", system-ui, sans-serif;
+
+  /* กันมือถือจอเตี้ย: ให้เลื่อนในกล่องได้ */
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cozycat-confirm-title{
+  font-weight: 800;
+  letter-spacing: .02em;
+  margin-bottom: 6px;
+}
+
+.cozycat-confirm-text{
+  font-size: 13px;
+  line-height: 1.35;
+  opacity: .85;
+}
+
+.cozycat-confirm-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cozycat-confirm-btn{
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: rgba(44,36,32,.08);
+  color: #2C2420;
+  font-weight: 700;
+}
+
+.cozycat-confirm-btn:hover{ background: rgba(44,36,32,.12); }
+
+.cozycat-confirm-btn.danger{
+  background: rgba(44,36,32,.95);
+  color: #F7F5F0;
+}
+.cozycat-confirm-btn.danger:hover{ opacity: .92; }

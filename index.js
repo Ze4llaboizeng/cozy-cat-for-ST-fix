@@ -4,6 +4,46 @@ const extensionName = 'cozy-cat-for-ST';
 const RP_BASE_YEAR = 2000; // internal baseline year for Date math
 const RP_EPOCH = { m: 12, d: 31, hh: 23, mm: 45, baseAgeDays: 63 }; // 31 Dec 23:45, 9 weeks
 
+function cozyConfirmReset() {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('cozycat-confirm');
+    if (existing) existing.remove();
+
+    const wrap = document.createElement('div');
+    wrap.id = 'cozycat-confirm';
+    wrap.className = 'cozycat-confirm-backdrop';
+
+    wrap.innerHTML = `
+      <div class="cozycat-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="cozycat-confirm-title">
+        <div class="cozycat-confirm-title" id="cozycat-confirm-title">Reset Cozy Cat?</div>
+        <div class="cozycat-confirm-text">
+          This will clear metadata of the Kitten for this chat.
+          
+        </div>
+        <div class="cozycat-confirm-actions">
+          <button type="button" class="cozycat-confirm-btn" data-act="cancel">Cancel</button>
+          <button type="button" class="cozycat-confirm-btn danger" data-act="ok">Reset</button>
+        </div>
+      </div>
+    `;
+
+    function close(val) {
+      wrap.remove();
+      resolve(val);
+    }
+
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) close(false);
+    });
+
+    wrap.querySelector('[data-act="cancel"]').addEventListener('click', () => close(false));
+    wrap.querySelector('[data-act="ok"]').addEventListener('click', () => close(true));
+
+    document.body.appendChild(wrap);
+  });
+}
+
+
 function loadSettings() {
   $('.cozy-cat-settings').remove();
 
@@ -36,7 +76,7 @@ function loadSettings() {
                 <span>Enable Cozy Cat</span>
               </label>
 
-              <button type="button" class="btn" id="cozycatResetBtn"
+              <button type="button" class="cozycatResetBtn" id="cozycatResetBtn"
                 style="width:auto;min-width:0;padding:6px 10px;font-size:12px;line-height:1;border-radius:8px;">
                 Reset
               </button>
@@ -62,10 +102,11 @@ function loadSettings() {
   const $resetBtn = $root.find('#cozycatResetBtn');
   if ($resetBtn.length) {
     $resetBtn.on('click', async () => {
-      const ok = confirm('Reset Kitten data for THIS chat?\n\nThis will clear metadata of the Kitten for this chat (messages stay).');
-      if (!ok) return;
-      await resetCozyCatForThisChat();
+  const ok = await cozyConfirmReset();
+  if (!ok) return;
+  await resetCozyCatForThisChat();
 });
+
   }
   $root.find('.inline-drawer-toggle').on('click', function () {
     $(this).toggleClass('open');
