@@ -36,8 +36,7 @@
    ========================= */
 .cozycat-paw-btn {
   position: fixed;
-  /* Elevate above mobile overlays; mobile components use z-index up to 2^31-1 */
-  z-index: 2147483647;
+  z-index: 999999;
   width: 56px;
   height: 56px;
   border-radius: 999px;
@@ -750,7 +749,6 @@
   background: transparent;
   border: 1px solid;
   padding: 6px 8px;
-  
 
   font-family: "DM Sans", system-ui, sans-serif;
   font-size: 12px;
