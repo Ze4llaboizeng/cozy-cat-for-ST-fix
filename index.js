@@ -1807,10 +1807,33 @@ applyEnabledState(enabled);
   attachChatHooks();
 
 }
-jQuery(async () => {
-  loadSettings();
-  console.log('[cozy-cat-for-ST] Panel Loaded.');
-});
+// In desktop ST the extension relies on jQuery's ready handler to run loadSettings(),
+// but the mobile UI may not load jQuery.  Provide a fallback that uses
+// DOMContentLoaded and mounts the paw button directly when jQuery is unavailable.
+if (typeof jQuery !== 'undefined' && typeof jQuery === 'function') {
+  jQuery(async () => {
+    loadSettings();
+    console.log('[cozy-cat-for-ST] Panel Loaded via jQuery.');
+  });
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      loadSettings();
+      console.log('[cozy-cat-for-ST] Panel Loaded via DOMContentLoaded.');
+    } catch (e) {
+      console.warn('[cozy-cat-for-ST] loadSettings() failed; mounting paw button fallback.', e);
+      const enabledKey = `${extensionName}:enabled`;
+      const isEnabled = localStorage.getItem(enabledKey) === 'true';
+      if (isEnabled) {
+        try {
+          mountPawButton();
+        } catch (ex) {
+          console.error('[cozy-cat-for-ST] Failed to mount paw button fallback:', ex);
+        }
+      }
+    }
+  });
+}
 
 
 
