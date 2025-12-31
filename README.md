@@ -9,7 +9,7 @@
 * **Interactive Overlay:** A "phone-like" interface accessible via a draggable **Paw Button** 🐾.
   
 
-  <img src="UI Preview/01-home.jpg"  width= "300" > 
+<img src="UI Preview/01-home.jpg"  width= "300" > 
 
 
 * **Status Tracking:** Automatically tracks dynamic stats based on roleplay context:
