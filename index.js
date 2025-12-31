@@ -1,5 +1,34 @@
 const extensionName = 'cozy-cat-for-ST';
 
+function initMobileFallback() {
+  const enabledKey = `${extensionName}:enabled`;
+  const enabled = localStorage.getItem(enabledKey);
+  
+  // If never set on this device, assume enabled for mobile
+  if (enabled === null) {
+    localStorage.setItem(enabledKey, 'true');
+  }
+  
+  // Always mount paw button on mobile (user can disable via settings later)
+  try {
+    ensureMusicAudio();
+    mountPawButton();
+    
+    // Try to attach chat hooks if context is available
+    setTimeout(() => {
+      try {
+        attachChatHooks();
+      } catch (e) {
+        console.warn('[cozy-cat-for-ST] attachChatHooks failed (mobile):', e);
+      }
+    }, 1000); // Give SillyTavern time to initialize
+    
+    console.log('[cozy-cat-for-ST] Mobile fallback initialized successfully.');
+  } catch (e) {
+    console.error('[cozy-cat-for-ST] Mobile fallback initialization failed:', e);
+  }
+}
+
 // ===== RP Epoch (fixed story start) =====
 const RP_BASE_YEAR = 2000; // internal baseline year for Date math
 const RP_EPOCH = { m: 12, d: 31, hh: 23, mm: 45, baseAgeDays: 63 }; // 31 Dec 23:45, 9 weeks
@@ -1807,31 +1836,33 @@ applyEnabledState(enabled);
   attachChatHooks();
 
 }
-// In desktop ST the extension relies on jQuery's ready handler to run loadSettings(),
-// but the mobile UI may not load jQuery.  Provide a fallback that uses
-// DOMContentLoaded and mounts the paw button directly when jQuery is unavailable.
+
+// Desktop: use jQuery if available
 if (typeof jQuery !== 'undefined' && typeof jQuery === 'function') {
   jQuery(async () => {
-    loadSettings();
-    console.log('[cozy-cat-for-ST] Panel Loaded via jQuery.');
-  });
-} else {
-  document.addEventListener('DOMContentLoaded', () => {
     try {
       loadSettings();
-      console.log('[cozy-cat-for-ST] Panel Loaded via DOMContentLoaded.');
+      console.log('[cozy-cat-for-ST] Panel Loaded via jQuery (Desktop).');
     } catch (e) {
-      console.warn('[cozy-cat-for-ST] loadSettings() failed; mounting paw button fallback.', e);
-      // Without jQuery or settings UI we can't read the enabled flag.  Always
-      // mount the paw button on mobile fallback so the user can access the
-      // overlay even if the extension hasn't been enabled via desktop UI.
-      try {
-        mountPawButton();
-      } catch (ex) {
-        console.error('[cozy-cat-for-ST] Failed to mount paw button fallback:', ex);
-      }
+      console.error('[cozy-cat-for-ST] loadSettings() failed:', e);
+      // Fallback even on desktop if loadSettings fails
+      initMobileFallback();
     }
   });
+} 
+// Mobile: use DOMContentLoaded
+else {
+  // Check if DOM is already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[cozy-cat-for-ST] DOMContentLoaded fired (Mobile).');
+      initMobileFallback();
+    });
+  } else {
+    // DOM already loaded, run immediately
+    console.log('[cozy-cat-for-ST] DOM already loaded, running immediately (Mobile).');
+    initMobileFallback();
+  }
 }
 
 
