@@ -1675,23 +1675,27 @@ applyCatImages(root, state);
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
 const saved = getSavedPawPos();
-    if (saved) {
-      // ตรวจสอบขนาดจอปัจจุบัน
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const btnSize = 56; // ขนาดปุ่มโดยประมาณ
-      
-      // บังคับให้ค่า x, y อยู่ภายในขอบจอแน่นอน (เว้นขอบ 8px)
-      const safeX = Math.max(8, Math.min(vw - btnSize - 8, saved.x));
-      const safeY = Math.max(8, Math.min(vh - btnSize - 8, saved.y));
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-      btn.style.left = `${safeX}px`;
-      btn.style.top = `${safeY}px`;
+    // เช็คว่าค่าที่บันทึกไว้ ยังอยู่ในหน้าจอไหม (เผื่อขอบไว้สัก 50px)
+    const isWithinScreen = saved && (saved.x < vw - 50) && (saved.y < vh - 50);
+
+    if (isWithinScreen) {
+      // ถ้ายังอยู่ในจอ ใช้ตำแหน่งเดิม
+      btn.style.left = `${saved.x}px`;
+      btn.style.top = `${saved.y}px`;
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
+      // ถ้าหลุดจอ หรือไม่เคยเซฟ -> บังคับไป "ขวาล่าง"
+      btn.style.left = 'auto';
+      btn.style.top = 'auto';
       btn.style.right = '16px';
       btn.style.bottom = '16px';
+      
+      // ลบค่าที่เพี้ยนทิ้งไปด้วย เพื่อให้ครั้งหน้าจำค่าใหม่ที่ถูกต้อง
+      if (saved) localStorage.removeItem(pawPosKey);
     }
 
     let dragging = false;
