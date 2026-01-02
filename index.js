@@ -1674,10 +1674,19 @@ applyCatImages(root, state);
     btn.title = 'Cozy Cat Overlay';
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
-    const saved = getSavedPawPos();
+const saved = getSavedPawPos();
     if (saved) {
-      btn.style.left = `${saved.x}px`;
-      btn.style.top = `${saved.y}px`;
+      // ตรวจสอบขนาดจอปัจจุบัน
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const btnSize = 56; // ขนาดปุ่มโดยประมาณ
+      
+      // บังคับให้ค่า x, y อยู่ภายในขอบจอแน่นอน (เว้นขอบ 8px)
+      const safeX = Math.max(8, Math.min(vw - btnSize - 8, saved.x));
+      const safeY = Math.max(8, Math.min(vh - btnSize - 8, saved.y));
+
+      btn.style.left = `${safeX}px`;
+      btn.style.top = `${safeY}px`;
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
