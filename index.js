@@ -44,10 +44,12 @@ function cozyConfirmReset() {
 
 
 function loadSettings() {
-  $('.cozy-cat-settings').remove();
+ $('.cozy-cat-settings').remove();
 
   const enabledKey = `${extensionName}:enabled`;
+  const mobileKey = `${extensionName}:mobileMode`; // <--- (ใหม่) คีย์สำหรับโหมดมือถือ
   const enabled = localStorage.getItem(enabledKey) === 'true';
+  const mobileMode = localStorage.getItem(mobileKey) === 'true'; // <--- (ใหม่) โหลดค่าเดิม
 
   const settingsHtml = `
     <div class="cozy-cat-settings">
@@ -65,52 +67,81 @@ function loadSettings() {
               Hopefully, you guys enjoy it. Have fun:)
             </small>
           </div>
-
           <hr>
-
           <div class="toggle-and-lower-area">
-            <div class="cozycat-settings-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            
+            <div class="cozycat-settings-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <label class="checkbox_label" for="${extensionName}-enabled" style="margin:0;">
                 <input id="${extensionName}-enabled" type="checkbox" ${enabled ? 'checked' : ''}>
                 <span>Enable Cozy Cat</span>
               </label>
-
-              <button type="button" class="cozycatResetBtn" id="cozycatResetBtn"
-                style="width:auto;min-width:0;padding:6px 10px;font-size:12px;line-height:1;border-radius:8px;">
-                Reset
-              </button>
+              <button type="button" class="cozycatResetBtn" id="cozycatResetBtn">Reset Data</button>
             </div>
 
-            <div style="text-align:center;color:#aaa;padding:12px 0 0;">
+            <div class="cozycat-settings-row" style="display:flex;align-items:center;margin-bottom:8px;">
+              <label class="checkbox_label" for="${extensionName}-mobile" style="margin:0;">
+                <input id="${extensionName}-mobile" type="checkbox" ${mobileMode ? 'checked' : ''}>
+                <span>Mobile Layout (Bottom-Left)</span>
+              </label>
+            </div>
 
+            <div style="text-align:center;color:#aaa;padding:8px 0;">
               <div style="opacity:.7;font-size:12px;margin-top:6px;line-height:1.3;">
-                This Extension is for my character, "Your Pet Cat." <br> The reset button will clears all data saved within the extension (but it won't delete chat history). If you want to re-roll the kitten, use the reset button. 𐔌՞꜆. ̫ .꜀՞𐦯
+                Toggle "Mobile Layout" to move the paw to the bottom-left.<br>
+                Use the reset button to re-roll the kitten. 𐔌՞꜆. ̫ .꜀՞𐦯
               </div>
-</div>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
   `;
   $('#extensions_settings').append(settingsHtml);
-// drawer open/close
+
   const $root = $('.cozy-cat-settings');
 
-  // Reset CozyCat per-chat data (synced).
-  // Note: we keep a reset marker so old COZY_CAT_DATA blocks in chat history won't re-hydrate immediately.
+  // Logic ปุ่ม Reset
   const $resetBtn = $root.find('#cozycatResetBtn');
   if ($resetBtn.length) {
     $resetBtn.on('click', async () => {
-  const ok = await cozyConfirmReset();
-  if (!ok) return;
-  await resetCozyCatForThisChat();
-});
-
+      const ok = await cozyConfirmReset();
+      if (!ok) return;
+      await resetCozyCatForThisChat();
+    });
   }
+
+  // Logic Drawer (เปิด/ปิดเมนู)
   $root.find('.inline-drawer-toggle').on('click', function () {
     $(this).toggleClass('open');
     $root.find('.inline-drawer-icon').toggleClass('down up');
     $root.find('.inline-drawer-content').toggleClass('open');
+  });
+
+  // Logic ปุ่ม Enable (เขียนไว้ตรงนี้เพื่อให้ทำงานได้ชัวร์)
+  $root.find(`#${extensionName}-enabled`).on('change', function () {
+    const isEnabled = this.checked;
+    localStorage.setItem(enabledKey, String(isEnabled));
+    applyEnabledState(isEnabled);
+  });
+
+  // Logic ปุ่ม Mobile Mode (เพิ่มใหม่)
+  $root.find(`#${extensionName}-mobile`).on('change', function () {
+    const isMobile = this.checked;
+    localStorage.setItem(mobileKey, String(isMobile));
+    
+    // สั่งย้ายปุ่มทันที
+    const btn = document.getElementById('cozycat-paw-btn');
+    if (btn) {
+        localStorage.removeItem(`${extensionName}:pawPos`); // ล้างค่าตำแหน่งเดิม
+        if (isMobile) {
+            btn.style.left = '16px'; btn.style.bottom = '16px';
+            btn.style.right = 'auto'; btn.style.top = 'auto';
+        } else {
+            btn.style.left = 'auto'; btn.style.bottom = '16px';
+            btn.style.right = '16px'; btn.style.top = 'auto';
+        }
+    }
   });
 
   // ===== Overlay IDs / storage keys =====
@@ -1674,91 +1705,53 @@ applyCatImages(root, state);
     btn.title = 'Cozy Cat Overlay';
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
-    // 1. ฟังก์ชันตรวจสอบและดึงปุ่มกลับเข้าจอ (Clamping)
-    function clampToScreen() {
-      // ถ้าปุ่มยังใช้ค่า Default (ขวาล่าง) ไม่ต้องทำอะไร ปล่อยให้ CSS จัดการ
-      if (btn.style.right !== 'auto' && btn.style.left === 'auto') return;
+    // เช็คว่าเปิดโหมดมือถือไว้ไหม?
+    const mobileKey = `${extensionName}:mobileMode`;
+    const isMobileMode = localStorage.getItem(mobileKey) === 'true';
 
-      const rect = btn.getBoundingClientRect();
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const margin = 8; // ระยะห่างจากขอบ
-
-      // คำนวณตำแหน่งปัจจุบัน
-      let currentLeft = parseFloat(btn.style.left);
-      let currentTop = parseFloat(btn.style.top);
-
-      // ถ้าไม่มีค่า (หรือเป็น auto) ให้ข้ามไป
-      if (isNaN(currentLeft) || isNaN(currentTop)) return;
-
-      // บังคับให้อยู่ในกรอบ
-      // Math.min(..., vw - width) -> กันตกขอบขวา
-      // Math.max(margin, ...) -> กันตกขอบซ้าย
-      const maxLeft = vw - rect.width - margin;
-      const maxTop = vh - rect.height - margin;
-
-      const newLeft = Math.max(margin, Math.min(currentLeft, maxLeft));
-      const newTop = Math.max(margin, Math.min(currentTop, maxTop));
-
-      btn.style.left = `${newLeft}px`;
-      btn.style.top = `${newTop}px`;
-    }
-
-    // 2. โหลดตำแหน่งเริ่มต้น
+    // โหลดตำแหน่งที่เคยลากไว้
     const saved = getSavedPawPos();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    
-    // ตรวจสอบความถูกต้องของค่าที่เซฟไว้ (ต้องไม่เกินขอบจอ และไม่ติดลบ)
-    const isValidPos = saved && 
-                       saved.x > 0 && saved.x < (vw - 50) && 
-                       saved.y > 0 && saved.y < (vh - 50);
+    const isValidPos = saved && saved.x > 0 && saved.x < (vw - 50) && saved.y > 0 && saved.y < (vh - 50);
 
-    if (isValidPos) {
-      // ถ้าค่าปกติ ใช้ค่านั้น
+    if (isMobileMode) {
+      // โหมดมือถือ -> ซ้ายล่าง
+      btn.style.left = '16px';
+      btn.style.bottom = '16px';
+      btn.style.right = 'auto';
+      btn.style.top = 'auto';
+    } else if (isValidPos) {
+      // ปกติ -> ตามที่เคยลากไว้
       btn.style.left = `${saved.x}px`;
       btn.style.top = `${saved.y}px`;
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
-      // ถ้าค่าเพี้ยน หรือหลุดจอ -> รีเซ็ตไป "ขวาล่าง" (ใช้ CSS Anchor)
-      // วิธีนี้ดีกว่าเพราะถ้าหมุนจอ ปุ่มจะเกาะขวาล่างเสมอ
+      // เริ่มต้น -> ขวาล่าง
       btn.style.left = 'auto';
       btn.style.top = 'auto';
       btn.style.right = '16px';
       btn.style.bottom = '16px';
-      
-      // ล้างค่าขยะออก
-      if (saved) localStorage.removeItem(pawPosKey);
     }
 
-    // 3. เพิ่มตัวดักจับการหมุนจอ/ย่อขยายจอ
-    window.addEventListener('resize', clampToScreen);
-
-
-    // --- Drag Logic (คงเดิมแต่ปรับปรุงการบันทึก) ---
+    // Drag Logic (เหมือนเดิมแต่เพิ่มการจำค่า)
     let dragging = false;
     let moved = false;
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
-
-    function ensureLeftTopMode() {
-      // เปลี่ยนจาก mode right/bottom มาเป็น left/top เพื่อให้ลากได้ต่อเนื่อง
-      const rect = btn.getBoundingClientRect();
-      btn.style.left = `${rect.left}px`;
-      btn.style.top = `${rect.top}px`;
-      btn.style.right = 'auto';
-      btn.style.bottom = 'auto';
-    }
 
     btn.addEventListener('pointerdown', (e) => {
       dragging = true;
       moved = false;
       btn.setPointerCapture(e.pointerId);
       
-      ensureLeftTopMode(); // ล็อคตำแหน่งเป็น pixel เพื่อเริ่มลาก
-
       const rect = btn.getBoundingClientRect();
+      btn.style.left = `${rect.left}px`;
+      btn.style.top = `${rect.top}px`;
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+
       startLeft = rect.left;
       startTop = rect.top;
       startX = e.clientX;
@@ -1770,8 +1763,6 @@ applyCatImages(root, state);
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-
-      // คำนวณตำแหน่งใหม่แบบ Real-time
       btn.style.left = `${startLeft + dx}px`;
       btn.style.top = `${startTop + dy}px`;
     });
@@ -1782,9 +1773,6 @@ applyCatImages(root, state);
         toggleOverlay();
         return;
       }
-      
-      // เมื่อปล่อยมือ ให้ Clamp กันตกขอบอีกที แล้วค่อยบันทึก
-      clampToScreen();
       const rect = btn.getBoundingClientRect();
       savePawPos(rect.left, rect.top);
     });
