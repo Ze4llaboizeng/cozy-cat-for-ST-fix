@@ -1716,12 +1716,12 @@ applyCatImages(root, state);
     const isValidPos = saved && saved.x > 0 && saved.x < (vw - 50) && saved.y > 0 && saved.y < (vh - 50);
 
     if (isMobileMode) {
-      // โหมดมือถือ -> ซ้ายล่าง
-      btn.style.left = '16px';
-      btn.style.bottom = '16px';
+      // โหมดมือถือ -> ซ้ายล่าง (ดันขึ้นสูงหน่อยให้พ้นกล่องข้อความ)
+      btn.style.left = '10px';      // ชิดซ้าย
+      btn.style.bottom = '110px';   // ดันขึ้นมาจากขอบล่าง 110px
       btn.style.right = 'auto';
       btn.style.top = 'auto';
-    } else if (isValidPos) {
+    }else if (isValidPos) {
       // ปกติ -> ตามที่เคยลากไว้
       btn.style.left = `${saved.x}px`;
       btn.style.top = `${saved.y}px`;
