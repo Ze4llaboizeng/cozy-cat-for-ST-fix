@@ -1,5 +1,4 @@
 const extensionName = 'cozy-cat-for-ST';
-
 // ===== RP Epoch (fixed story start) =====
 const RP_BASE_YEAR = 2000; // internal baseline year for Date math
 const RP_EPOCH = { m: 12, d: 31, hh: 23, mm: 45, baseAgeDays: 63 }; // 31 Dec 23:45, 9 weeks
@@ -1663,6 +1662,7 @@ applyCatImages(root, state);
     return Math.max(min, Math.min(max, n));
   }
 
+  // ===== Draggable paw button (Smart Position) =====
   function mountPawButton() {
     if (document.getElementById(pawBtnId)) return;
 
@@ -1674,37 +1674,76 @@ applyCatImages(root, state);
     btn.title = 'Cozy Cat Overlay';
     btn.innerHTML = `<span class="cozycat-paw-emoji">🐾</span>`;
 
-const saved = getSavedPawPos();
+    // 1. ฟังก์ชันตรวจสอบและดึงปุ่มกลับเข้าจอ (Clamping)
+    function clampToScreen() {
+      // ถ้าปุ่มยังใช้ค่า Default (ขวาล่าง) ไม่ต้องทำอะไร ปล่อยให้ CSS จัดการ
+      if (btn.style.right !== 'auto' && btn.style.left === 'auto') return;
+
+      const rect = btn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const margin = 8; // ระยะห่างจากขอบ
+
+      // คำนวณตำแหน่งปัจจุบัน
+      let currentLeft = parseFloat(btn.style.left);
+      let currentTop = parseFloat(btn.style.top);
+
+      // ถ้าไม่มีค่า (หรือเป็น auto) ให้ข้ามไป
+      if (isNaN(currentLeft) || isNaN(currentTop)) return;
+
+      // บังคับให้อยู่ในกรอบ
+      // Math.min(..., vw - width) -> กันตกขอบขวา
+      // Math.max(margin, ...) -> กันตกขอบซ้าย
+      const maxLeft = vw - rect.width - margin;
+      const maxTop = vh - rect.height - margin;
+
+      const newLeft = Math.max(margin, Math.min(currentLeft, maxLeft));
+      const newTop = Math.max(margin, Math.min(currentTop, maxTop));
+
+      btn.style.left = `${newLeft}px`;
+      btn.style.top = `${newTop}px`;
+    }
+
+    // 2. โหลดตำแหน่งเริ่มต้น
+    const saved = getSavedPawPos();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    
+    // ตรวจสอบความถูกต้องของค่าที่เซฟไว้ (ต้องไม่เกินขอบจอ และไม่ติดลบ)
+    const isValidPos = saved && 
+                       saved.x > 0 && saved.x < (vw - 50) && 
+                       saved.y > 0 && saved.y < (vh - 50);
 
-    // เช็คว่าค่าที่บันทึกไว้ ยังอยู่ในหน้าจอไหม (เผื่อขอบไว้สัก 50px)
-    const isWithinScreen = saved && (saved.x < vw - 50) && (saved.y < vh - 50);
-
-    if (isWithinScreen) {
-      // ถ้ายังอยู่ในจอ ใช้ตำแหน่งเดิม
+    if (isValidPos) {
+      // ถ้าค่าปกติ ใช้ค่านั้น
       btn.style.left = `${saved.x}px`;
       btn.style.top = `${saved.y}px`;
       btn.style.right = 'auto';
       btn.style.bottom = 'auto';
     } else {
-      // ถ้าหลุดจอ หรือไม่เคยเซฟ -> บังคับไป "ขวาล่าง"
+      // ถ้าค่าเพี้ยน หรือหลุดจอ -> รีเซ็ตไป "ขวาล่าง" (ใช้ CSS Anchor)
+      // วิธีนี้ดีกว่าเพราะถ้าหมุนจอ ปุ่มจะเกาะขวาล่างเสมอ
       btn.style.left = 'auto';
       btn.style.top = 'auto';
       btn.style.right = '16px';
       btn.style.bottom = '16px';
       
-      // ลบค่าที่เพี้ยนทิ้งไปด้วย เพื่อให้ครั้งหน้าจำค่าใหม่ที่ถูกต้อง
+      // ล้างค่าขยะออก
       if (saved) localStorage.removeItem(pawPosKey);
     }
 
+    // 3. เพิ่มตัวดักจับการหมุนจอ/ย่อขยายจอ
+    window.addEventListener('resize', clampToScreen);
+
+
+    // --- Drag Logic (คงเดิมแต่ปรับปรุงการบันทึก) ---
     let dragging = false;
     let moved = false;
-
     let startX = 0, startY = 0;
     let startLeft = 0, startTop = 0;
 
-    function ensureLeftTop() {
+    function ensureLeftTopMode() {
+      // เปลี่ยนจาก mode right/bottom มาเป็น left/top เพื่อให้ลากได้ต่อเนื่อง
       const rect = btn.getBoundingClientRect();
       btn.style.left = `${rect.left}px`;
       btn.style.top = `${rect.top}px`;
@@ -1715,9 +1754,9 @@ const saved = getSavedPawPos();
     btn.addEventListener('pointerdown', (e) => {
       dragging = true;
       moved = false;
-
       btn.setPointerCapture(e.pointerId);
-      ensureLeftTop();
+      
+      ensureLeftTopMode(); // ล็อคตำแหน่งเป็น pixel เพื่อเริ่มลาก
 
       const rect = btn.getBoundingClientRect();
       startLeft = rect.left;
@@ -1728,33 +1767,26 @@ const saved = getSavedPawPos();
 
     btn.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
-
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
 
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-
-      const rect = btn.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-
-      const nextLeft = clamp(startLeft + dx, 8, vw - w - 8);
-      const nextTop = clamp(startTop + dy, 8, vh - h - 8);
-
-      btn.style.left = `${nextLeft}px`;
-      btn.style.top = `${nextTop}px`;
+      // คำนวณตำแหน่งใหม่แบบ Real-time
+      btn.style.left = `${startLeft + dx}px`;
+      btn.style.top = `${startTop + dy}px`;
     });
 
     btn.addEventListener('pointerup', () => {
       dragging = false;
-
+      if (!moved) {
+        toggleOverlay();
+        return;
+      }
+      
+      // เมื่อปล่อยมือ ให้ Clamp กันตกขอบอีกที แล้วค่อยบันทึก
+      clampToScreen();
       const rect = btn.getBoundingClientRect();
       savePawPos(rect.left, rect.top);
-
-      if (!moved) toggleOverlay();
     });
 
     btn.addEventListener('keydown', (e) => {
@@ -1766,7 +1798,6 @@ const saved = getSavedPawPos();
 
     document.body.appendChild(btn);
   }
-
   function unmountPawButton() {
     const btn = document.getElementById(pawBtnId);
     if (btn) btn.remove();
